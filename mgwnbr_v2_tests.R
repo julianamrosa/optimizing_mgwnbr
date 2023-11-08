@@ -48,8 +48,8 @@ endTime-startTime
 
 startTime <- Sys.time()
 mgwnbr2(data=georgia_std, formula=PctBach~PctBlack+PctFB+TotPop90+PctEld,
-       LAT="Y", LONG="X", GLOBALMIN="NO", METHOD="ADAPTIVE_BSQ",
-       BANDWIDTH="CV", MODEL="GAUSSIAN", MGWR="NO")
+       lat="Y", long="X", globalmin=FALSE, method="adaptive_bsq",
+       bandwidth="cv", model="gaussian", mgwr=FALSE)
 endTime <- Sys.time()
 endTime-startTime
-#1.45 mins
+#1.35 mins

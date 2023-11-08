@@ -1,7 +1,7 @@
-mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
-                   GLOBALMIN="yes", METHOD, MODEL="gaussian",
-                   MGWR="yes", BANDWIDTH="cv", OFFSET=NULL,
-                   DISTANCEKM="no", INT=50, H=NULL){
+mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
+                   globalmin=TRUE, method, model="negbin",
+                   mgwr=TRUE, bandwidth="cv", offset=NULL,
+                   distancekm=FALSE, INT=50, H=NULL){
   output <- list()
   header <- c()
   yhat_beta <<- NULL
@@ -25,13 +25,13 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   #print(Y)
   ## flag otimizacao - end ##
   wt <<-rep(1, N)
-  if (!is.null(WEIGHT)){
-    wt <<- data[, WEIGHT]
+  if (!is.null(weight)){
+    wt <<- data[, weight]
     wt <<- as.matrix(wt)
   }
   Offset <<- rep(0, N)
-  if (!is.null(OFFSET)){
-    Offset <- data[, OFFSET]
+  if (!is.null(offset)){
+    Offset <- data[, offset]
     Offset <<- as.matrix(Offset)
   }
   #X <- as.matrix(cbind(rep(1, N), X))
@@ -49,7 +49,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   mAi <- matrix(0, N, nvarg)
   ENP <- rep(0, nvarg+2)
   ## global estimates ##
-  if (toupper(MODEL)=="POISSON" | toupper(MODEL)=="NEGBIN"){
+  if (model=="poisson" | model=="negbin"){
     uj <- (Y+mean(Y))/2
     nj <- log(uj)
     parg <<- sum((Y-uj)^2/uj)/(N-nvarg)
@@ -60,7 +60,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
       parold <- parg
       cont1 <- 1
       cont3 <- 1
-      if(toupper(MODEL)=="POISSON"){
+      if(model=="poisson"){
         alphag <<- E^-6
         parg <<- 1/alphag
       }
@@ -120,7 +120,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
         uj <- ifelse(uj<E^-150, E^-150, uj)
         tt <- Y/uj
         tt <- ifelse(tt==0, E^-10, tt)
-        if (toupper(MODEL)=="POISSON"){
+        if (model=="poisson"){
           devg <- 2*sum(Y*log(tt)-(Y-uj))
         }
         else{
@@ -142,7 +142,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     }
     varg <- diag(solve(t(X*wt*ai)%*%X))
   }
-  else if (toupper(MODEL)=="LOGISTIC"){
+  else if (model=="logistic"){
     uj <- (Y+mean(Y))/2
     nj <- log(uj/(1-uj))
     devg <- 0
@@ -177,9 +177,9 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     yhat <- uj
     varg <- diag(solve(t(X*wt*ai)%*%X))
   }
-  LONG <- data[, LONG]
-  LAT <- data[, LAT]
-  COORD <<- matrix(c(LONG, LAT), ncol=2)
+  long <- data[, long]
+  lat <- data[, lat]
+  COORD <<- matrix(c(long, lat), ncol=2)
   distance <- dist(COORD, "euclidean")
   sequ <<- 1:N
   cv <- function(h, y, x, fi){
@@ -188,7 +188,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
       for (j in 1:N){
         seqi <- rep(i, N)
         distan <- cbind(seqi, sequ, as.matrix(distance)[,i])
-        if (toupper(DISTANCEKM)=="YES"){
+        if (distancekm){
           distan[,3] <- distan[,3]*111
         }
       }
@@ -196,15 +196,15 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
       w <- rep(0, u)
       for (jj in 1:u){
         w[jj] <- exp(-0.5*(distan[jj,3]/h)^2)
-        if (toupper(BANDWIDTH)=="CV"){
+        if (bandwidth=="cv"){
           w[i] <- 0
         }
       }
-      if (toupper(METHOD)=="FIXED_BSQ"){
+      if (method=="fixed_bsq"){
         position <- which(distan[,3]>h)
         w[position] <- 0
       }
-      else if (toupper(METHOD)=="ADAPTIVE_BSQ"){
+      else if (method=="adaptive_bsq"){
         distan <- distan[order(distan[, 3]), ]
         distan <- cbind(distan, 1:nrow(distan))
         w <- matrix(0, N, 2)	
@@ -218,13 +218,13 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
           }
           w[jj,2] <- distan[jj,2]
         }
-        if (toupper(BANDWIDTH)=="CV"){
+        if (bandwidth=="cv"){
           w[which(w[,2]==i)] <- 0
         }
         w <- w[order(w[, 2]), ]
         w <- w[ ,1]
       }
-      if (toupper(MODEL)=="GAUSSIAN"){
+      if (model=="gaussian"){
         if (det(t(x)%*%(w*x*wt))==0){
           b <- rep(0, nvar)
         }
@@ -240,7 +240,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
         }
         next
       }
-      else if (toupper(MODEL)=="POISSON" | toupper(MODEL)=="NEGBIN"){
+      else if (model=="poisson" | model=="negbin"){
         uj <- yhat
         par <- parg
         nj <- log(uj)
@@ -251,7 +251,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
           dpar <- 1
           parold <- par
           cont1 <- 1
-          if (toupper(MODEL)=="POISSON"){
+          if (model=="poisson"){
             alpha <- E^-6
             par <- 1/alpha
           }
@@ -315,7 +315,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
             uj <- ifelse(uj<E^-150, E^-150, uj)
             tt <- y/uj
             tt <- ifelse(tt==0, E^-10, tt)
-            if (toupper(MODEL)=="POISSON"){
+            if (model=="poisson"){
               dev <- 2*sum(y*log(tt)-(y-uj))
             }
             else{
@@ -342,7 +342,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
         }
         next
       }
-      else if (toupper(MODEL)=="LOGISTIC"){
+      else if (model=="logistic"){
         uj <- yhat
         nj <- log(uj/(1-uj))
         dev <- 0
@@ -388,14 +388,14 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
         next
       }
     }
-    if (toupper(MODEL)=="GAUSSIAN"){
+    if (model=="gaussian"){
       CV <- t((y-yhat)*wt)%*%(y-yhat)
       npar <- sum(s)
       AICc <- 2*N*log(CV/N)+N*log(2*3.14159)+N*(N+npar)/(N-2-npar)
     }
-    else if (toupper(MODEL)=="POISSON" | toupper(MODEL)=="NEGBIN"){
+    else if (model=="poisson" | model=="negbin"){
       CV <- t((y-yhat)*wt)%*%(y-yhat)
-      if (toupper(MODEL)=="POISSON"){
+      if (model=="poisson"){
         ll <- sum(-yhat+y*log(yhat)-lgamma(y+1))
         npar <- sum(s)
       }
@@ -406,7 +406,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
       AIC <- 2*npar-2*ll
       AICC <- AIC +(2*npar*(npar+1))/(N-npar-1)
     }
-    else if (toupper(MODEL)=="LOGISTIC"){
+    else if (model=="logistic"){
       uj <- ifelse(uj==0, E^-10, uj)
       uj <- ifelse(uj==1, 0.99999, uj)
       CV <- t((y-yhat)*wt)%*%(y-yhat)
@@ -415,7 +415,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
       AIC <- 2*npar-2*ll
       AICC <- AIC +(2*npar*(npar+1))/(N-npar-1)
     }
-    if (toupper(BANDWIDTH)=="AIC"){
+    if (bandwidth=="aic"){
       CV <- AICC
     }
     res <- cbind(CV, npar)
@@ -423,20 +423,20 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   }
   GSS <- function(depy, indepx, fix){
     # DEFINING GOLDEN SECTION SEARCH PARAMETERS #
-    if(toupper(METHOD)=="FIXED_G" | toupper(METHOD)=="FIXED_BSQ"){
+    if(method=="fixed_g" | method=="fixed_bsq"){
       ax <- 0
       bx <- as.integer(max(distance)+1)
-      if (toupper(DISTANCEKM)=="YES"){
+      if (distancekm){
         bx <- bx*111
       }
     }
-    else if (toupper(METHOD)=="ADAPTIVE_BSQ"){
+    else if (method=="adaptive_bsq"){
       ax <- 5
       bx <- N
     }
     r <- 0.61803399
     tol <- 0.1
-    if (toupper(GLOBALMIN)=="NO"){
+    if (!globalmin){
       lower <- ax
       upper <- bx
       xmin <- matrix(0, 1, 2)
@@ -476,7 +476,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
         xmin[GMY, 1] <- golden
         xmin[GMY, 2] <- h1
         npar <- res1[1]
-        if (toupper(METHOD)=="ADAPTIVE_BSQ"){
+        if (method=="adaptive_bsq"){
           xmin[GMY, 2] <- floor(h1)
           xming <- xmin[GMY, 2]
         }
@@ -486,7 +486,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
         xmin[GMY, 1] <- golden
         xmin[GMY, 2] <- h2
         npar <- res2[1]
-        if (toupper(METHOD)=="ADAPTIVE_BSQ"){
+        if (method=="adaptive_bsq"){
           xmin[GMY, 2] <- floor(h2)
           xming <- xmin[GMY, 2]
         }
@@ -533,7 +533,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
           xmin[GMY,1] <- golden
           xmin[GMY,2] <- h1
           npar <- res1[1]
-          if (toupper(METHOD)=="ADAPTIVE_BSQ"){
+          if (method=="adaptive_bsq"){
             xmin[GMY,2] <- floor(h1)
             xming <- xmin[GMY,2]
           }
@@ -543,7 +543,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
           xmin[GMY,1] <- golden
           xmin[GMY,2] <- h2
           npar <- res2[1]
-          if (toupper(METHOD)=="ADAPTIVE_BSQ"){
+          if (method=="adaptive_bsq"){
             xmin[GMY,2] <- floor(h2)
             xming <- xmin[GMY,2]
           }
@@ -551,7 +551,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
         xming <- xmin[GMY,2]
       }
     }
-    if (toupper(GLOBALMIN)=="YES"){
+    if (globalmin){
       xming <- xmin[which(xmin[,1]==min(xmin[,1])),2]
     }
     bandwidth <- xming
@@ -565,23 +565,23 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
       for (j in 1:N){                                                                                                                        
         seqi <- rep(i, N)
         distan <- cbind(seqi, sequ, as.matrix(distance)[,i])
-        if (toupper(DISTANCEKM)=="YES"){
+        if (distancekm){
           distan[,3] <- distan[,3]*111
         }
       }
       u <- nrow(distan)
       w <- rep(0, u)
-      if (toupper(METHOD)=="FIXED_G"){
+      if (method=="fixed_g"){
         for (jj in 1:u){
           w[jj] <- exp(-(distan[jj,3]/h)^2)
         }
       }
-      else if (toupper(METHOD)=="FIXED_BSQ"){
+      else if (method=="fixed_bsq"){
         for (jj in 1:u){
           w[jj] <- (1-(distan[jj,3]/h)^2)^2
         }
       }
-      else if (toupper(METHOD)=="ADAPTIVE_BSQ"){
+      else if (method=="adaptive_bsq"){
         distan <- distan[order(distan[, 3]), ]
         distan <- cbind(distan, 1:nrow(distan))
         w <- matrix(0, N, 2)
@@ -599,7 +599,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
         w <- w[,1]
       }
       ## MODEL SELECTION ##
-      if (toupper(MODEL)=="GAUSSIAN"){
+      if (model=="gaussian"){
         if (det(t(x)%*%(w*x*wt))==0){
           b <- rep(0, nvar)
         }
@@ -632,7 +632,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
           }
         }
       }
-      else if (toupper(MODEL)=="POISSON" | toupper(MODEL)=="NEGBIN"){
+      else if (model=="poisson" | model=="negbin"){
         uj <- yhat
         par <- parg
         nj <- log(uj)
@@ -643,11 +643,11 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
           parold <- par
           cont1 <- 1
           cont3 <- 1
-          if (toupper(MODEL)=="POISSON"){
+          if (model=="poisson"){
             alpha <- E^-6
             par <- 1/alpha
           }
-          else{ #MODEL=='NEGBIN'
+          else{ #model=='NEGBIN'
             if (par<=E^-5 & i>1){
               par=1/alphai[i-1,2]
             }
@@ -707,10 +707,10 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
             uj <- ifelse(uj<E^-150, E^-150, uj)
             tt <- y/uj
             tt <- ifelse(tt==0, E^-10, tt)
-            if (toupper(MODEL)=="POISSON"){
+            if (model=="poisson"){
               dev <- 2*sum(y*log(tt)-(y-uj))
             }
-            else{ #MODEL=="NEGBIN"
+            else{ #model=="NEGBIN"
               dev <- 2*sum(y*log(tt)-(y+1/alpha)*log((1+alpha*y)/(1+alpha*uj)))
             }
             cont2 <- cont2+1
@@ -742,9 +742,9 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
             rj[i,] <<- (x[i,]%*%solve(t(x)%*%(w*ai*x*wt))%*%t(x*w*wt*ai))
           }
         }
-        if (toupper(MODEL)=="NEGBIN"){
+        if (model=="negbin"){
           hess <- sum(w*wt*(trigamma(par+y)-trigamma(par)+1/par-2/(par+exp(yhat_beta))+(y+par)/(par+exp(yhat_beta))^2))
-          if (toupper(MGWR)!="YES"){
+          if (!mgwr){
             hess <- sum(w*wt*(trigamma(par+y)-trigamma(par)+1/par-2/(par+uj)+(y+par)/(par+uj)^2))
             hess <- ifelse(hess==0, E^-23, hess)
           }
@@ -754,7 +754,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
           alphai[i,3] <<- sealpha
         }
       }
-      else{ #else if (toupper(MODEL)=="LOGISTIC"){
+      else{ #else if (model=="logistic"){
         uj <- yhat
         nj <- log(uj/(1-uj))
         dev <- 0
@@ -825,7 +825,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     yhbeta <- cbind(yhatm, beta)
     return (yhbeta)
   }
-  if (toupper(MGWR)!="YES"){
+  if (!mgwr){
     finb <- rep(0, N)
     yhat_beta <<- Offset
     if (!is.null(H)){
@@ -874,7 +874,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
       diffi <- 0
       fi2 <- 0
       for (i in 1:nvarg){
-        if (toupper(MODEL)=="GAUSSIAN"){
+        if (model=="gaussian"){
           ferror <- error+Fi[,i]
           if (!is.null(H)){
             mband[i] <- H
@@ -893,7 +893,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
           sm <<- sm-mrj2+mrj[,m1:m2]
           Cm[,m1:m2] <- (1/X[,i])*mrj[,m1:m2]
         }
-        else{ #else if (toupper(MODEL)=="POISSON" | toupper(MODEL)=="NEGBIN" | toupper(MODEL)=="LOGISTIC"){
+        else{ #else if (model=="poisson" | model=="negbin" | model=="logistic"){
           yhat_beta <<- (apply(Fi, 1, sum)+Offset)
           if (!is.null(H)){
             mband[i] <- H
@@ -933,7 +933,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     names(output)[length(output)] <- "band"
   }
   v1 <- sum(diag(sm))
-  if (toupper(MODEL)=='GAUSSIAN'){
+  if (model=='gaussian'){
     yhat <- apply(Fi, 1, sum)
     res <- Y-yhat
     rsqr1 <- t(res*wt)%*%res
@@ -948,19 +948,19 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     m1 <- (jj-1)*N+1
     m2 <- m1+(N-1)
     ENP[jj] <- sum(diag(mrj[,m1:m2]))
-    if (toupper(MGWR)!='YES'){
+    if (!mgwr){
       ENP[jj] <- sum(diag(sm))
     }
-    if (toupper(MODEL)=='GAUSSIAN'){
-      if (toupper(MGWR)!='YES'){
+    if (model=='gaussian'){
+      if (!mgwr){
         stdbm[,jj] <- sqrt(sigma2*sm3[,jj])
       }
       else{
         stdbm[,jj] <- sqrt(diag(sigma2*Cm[,m1:m2]%*%t(Cm[,m1:m2])))
       }
     }
-    else{ #else if (toupper(MODEL)=='POISSON' | toupper(MODEL)=='NEGBIN' | toupper(MODEL)=='LOGISTIC'){
-      if (toupper(MGWR)=='YES'){
+    else{ #else if (model=='poisson' | model=='negbin' | model=='logistic'){
+      if (mgwr){
         stdbm[,jj] <- sqrt(diag(Cm[,m1:m2]%*%diag(1/mAi[,jj])%*%t(Cm[,m1:m2])))
       }
       else{
@@ -968,7 +968,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
       }
     }
   }
-  if (toupper(MODEL)=='GAUSSIAN'){
+  if (model=='gaussian'){
     ll <- -N*log(rsqr1/N)/2-N*log(2*acos(-1))/2-sum((Y-yhat)*(Y-yhat))/(2*(rsqr1/N))
     AIC <- 2*v1-2*ll
     AICc <- AIC+2*(v1*(v1+1)/(N-v1-1))
@@ -982,7 +982,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     output <- append(output, list(stats_measures))
     names(output)[length(output)] <- "measures"
   }
-  else if (toupper(MODEL)=='POISSON'){
+  else if (model=='poisson'){
     yhat <- exp(apply(Fi, 1, sum)+Offset)
     tt <- Y/yhat
     tt <- ifelse(tt==0, E^-10, tt)
@@ -1005,7 +1005,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     output <- append(output, list(stats_measures))
     names(output)[length(output)] <- "measures"
   }
-  else if (toupper(MODEL)=='NEGBIN'){
+  else if (model=='negbin'){
     yhat <- exp(apply(Fi, 1, sum)+Offset)
     tt <- Y/yhat
     tt <- ifelse(tt==0, E^-10, tt)
@@ -1028,7 +1028,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     output <- append(output, list(stats_measures))
     names(output)[length(output)] <- "measures"
   }
-  else{ #else if (toupper(MODEL)=='LOGISTIC'){
+  else{ #else if (model=='logistic'){
     yhat <- exp(apply(Fi, 1, sum))/(1+exp(apply(Fi, 1, sum)))
     tt <- Y/yhat
     tt <- ifelse(tt==0, E^-10, tt)
@@ -1060,7 +1060,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   }
   ENP[nvarg+1] <- sum(diag(sm))
   ENP[nvarg+2] <- sum(diag(Sm2))
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     ENP <- c(ENP, (v1/nvarg))
     names(ENP) <- c('Intercept', XVAR, 'MGWR', 'GWR', 'alpha')
   }
@@ -1077,15 +1077,15 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   malpha[1:nvarg] <- 0.05/ENP[1:nvarg]
   malpha[nvarg+1] <- 0.05*(nvarg/v1)
   malpha[nvarg+2] <- 0.05*(nvarg/sum(diag(Sm2)))
-  if (toupper(MGWR)!='YES'){
+  if (!mgwr){
     malpha[1:nvarg] <- 0.05*(nvarg/v1)
   }
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     malpha[nvarg+3] <- 0.05*(nvarg/v1)
   }
   t_critical <- abs(qt(malpha/2,dff))
   beta2 <- beta
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     alpha <- alphai[,2]
     beta2 <- cbind(beta, alpha)
   }
@@ -1094,7 +1094,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   qntl <- rbind(round(qntl, 6), IQR=round(IQR, 6))
   descriptb <- rbind(apply(beta2, 2, mean), apply(beta2, 2, min), apply(beta2, 2, max))
   rownames(descriptb) <- c('Mean', 'Min', 'Max')
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     colnames(qntl) <- c('Intercept', XVAR, 'alpha')
   }
   else{
@@ -1103,7 +1103,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   header <- append(header, "Quantiles of MGWR Parameter Estimates")
   output <- append(output, list(qntl))
   names(output)[length(output)] <- "qntls_mgwr_param_estimates"
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     colnames(descriptb) <- c('Intercept', XVAR, 'alpha')
   }
   else{
@@ -1114,7 +1114,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   names(output)[length(output)] <- "descript_stats_mgwr_param_estimates"
   stdbeta <- stdbm
   stdbeta2 <- stdbeta
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     stdalpha <- alphai[,3]
     stdbeta2 <- cbind(stdbeta, stdalpha)
   }
@@ -1130,7 +1130,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   header <- append(header, "t-Critical")
   output <- append(output, list(t_critical))
   names(output)[length(output)] <- "t_critical"
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     colnames(qntls) <- c('Intercept', XVAR, 'alpha')
   }
   else{
@@ -1139,7 +1139,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   header <- append(header, "Quantiles of MGWR Standard Errors")
   output <- append(output, list(qntls))
   names(output)[length(output)] <- "qntls_mgwr_se"
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     colnames(descripts) <- c('Intercept', XVAR, 'alpha')
   }
   else{
@@ -1149,17 +1149,17 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   output <- append(output, list(descripts))
   names(output)[length(output)] <- "descripts_stats_se"
   #### global estimates ####
-  if (toupper(MODEL)=='GAUSSIAN'){
+  if (model=='gaussian'){
     bg <- solve(t(X)%*%(X*wt))%*%t(X)%*%(Y*wt)
     s2g <- as.numeric(t((Y-X%*%bg)*wt)%*%(Y-X%*%bg)/(N-nrow(bg)))
     varg <- diag(solve(t(X)%*%(X*wt))*s2g)
   }
-  if (is.null(WEIGHT)){
+  if (is.null(weight)){
     vargd <- varg
     dfg <- N-nrow(bg)
   }
   stdg <- matrix(sqrt(vargd))
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     bg <- rbind(bg, alphag)
     stdg <- rbind(stdg, sealphag)
     dfg <- dfg-1
@@ -1167,7 +1167,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   tg <- bg/stdg
   probtg <- 2*(1-pt(abs(tg), dfg))
   bg_stdg_tg_probtg <- cbind(bg, stdg, tg, probtg)
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     rownames(bg_stdg_tg_probtg) <- c('Intercept', XVAR, 'alpha')
   }
   else{
@@ -1180,7 +1180,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   header <- append(header, "NOTE: The denominator degrees of freedom for the t tests is...")
   output <- append(output, list(dfg))
   names(output)[length(output)] <- "t_test_dfs"
-  if (toupper(MODEL)=='GAUSSIAN'){
+  if (model=='gaussian'){
     resg <- (Y-X%*%bg)
     rsqr1g <- t(resg*wt)%*%resg
     ymg <- t(Y*wt)%*%Y
@@ -1198,7 +1198,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     output <- append(output, list(global_measures))
     names(output)[length(output)] <- "global_measures"
   }
-  else if (toupper(MODEL)=='POISSON'){
+  else if (model=='poisson'){
     yhatg <- exp(X%*%bg+Offset)
     ll <- sum(-yhatg+Y*log(yhatg)-lgamma(Y+1))
     AIC <- -2*ll+2*nvarg
@@ -1215,7 +1215,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     output <- append(output, list(global_measures))
     names(output)[length(output)] <- "global_measures"
   }
-  else if (toupper(MODEL)=='NEGBIN'){
+  else if (model=='negbin'){
     yhatg <- exp(X%*%bg[1:(nrow(bg)-1)]+Offset)
     ll <- sum(Y*log(alphag*yhatg)-(Y+1/alphag)*log(1+alphag*yhatg)+lgamma(Y+1/alphag)-lgamma(1/alphag)-lgamma(Y+1))
     AIC <- -2*ll+2*(nvarg+1)
@@ -1232,7 +1232,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
     output <- append(output, list(global_measures))
     names(output)[length(output)] <- "global_measures"
   }
-  else{ #else if (toupper(MODEL)=='LOGISTIC'){
+  else{ #else if (model=='logistic'){
     yhatg <- exp(X%*%bg)/(1+exp(X%*%bg))
     lyhat2 <- 1-yhatg
     lyhat2 <- ifelse(lyhat2==0, E^-10, lyhat2)
@@ -1276,7 +1276,7 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   }
   sig_parameters2 <<- as.data.frame(sig)
   names(sig_parameters2) <<- c(paste('sig_', colname1, sep=''))
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     atstat <- alphai[,2]/alphai[,3]
     aprobtstat <- 2*(1-pnorm(abs(atstat)))
     siga <- rep("not significant at 90%", N)
@@ -1302,14 +1302,14 @@ mgwnbr2 <- function(data, formula, WEIGHT=NULL, LAT, LONG,
   }
   ###################################
   min_bandwidth <<- as.data.frame(t(mband))
-  if (toupper(MGWR)!="YES"){
+  if (!mgwr){
     names(min_bandwidth) <<- 'Intercept'
   }
   else{
     names(min_bandwidth) <<- colname1
   }
   parameters2 <<- cbind(parameters2, sig_parameters2)
-  if (toupper(MODEL)=='NEGBIN'){
+  if (model=='negbin'){
     Alpha <<- cbind(Alpha, sig_alpha)
   }
   i <- 1
