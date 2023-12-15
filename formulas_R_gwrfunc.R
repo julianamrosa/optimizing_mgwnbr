@@ -41,3 +41,4 @@ formula_r <- function(formula, data = list()) {
   print(x)
   print(y)
 }
+formula_r(data=georgia_std, formula=PctBach~PctBlack+PctFB+TotPop90+PctEld)
