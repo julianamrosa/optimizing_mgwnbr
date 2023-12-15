@@ -27,12 +27,12 @@ mgwnbr3 <- function(data, formula, weight=NULL, lat, long,
   wt <<-rep(1, N)
   if (!is.null(weight)){
     wt <<- data[, weight]
-    wt <<- as.matrix(wt)
+    #wt <<- as.matrix(wt)
   }
   Offset <<- rep(0, N)
   if (!is.null(offset)){
     Offset <- data[, offset]
-    Offset <<- as.matrix(Offset)
+    #Offset <<- as.matrix(Offset)
   }
   #X <- as.matrix(cbind(rep(1, N), X))
   nvarg <<- ncol(X)
