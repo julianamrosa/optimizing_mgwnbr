@@ -46,7 +46,9 @@ mgwnbr2(data=georgia_std, formula=PctBach~PctBlack+PctFB+TotPop90+PctEld,
         bandwidth="cv", model="gaussian", mgwr=FALSE)
 endTime <- Sys.time()
 endTime-startTime
-#1.17
+#49.6 segs
+#1.12 mins
+#57.5 segs
 
 #com as.vector()
 startTime <- Sys.time()
@@ -55,7 +57,9 @@ mgwnbr3(data=georgia_std, formula=PctBach~PctBlack+PctFB+TotPop90+PctEld,
         bandwidth="cv", model="gaussian", mgwr=FALSE)
 endTime <- Sys.time()
 endTime-startTime
-#1.01
+#43.4 segs
+#57.0 segs
+#49.1 segs
 
 ## mgwr
 
@@ -66,7 +70,10 @@ mgwnbr2(data=georgia_std, formula=PctBach~PctBlack+PctFB+TotPop90+PctEld,
         bandwidth="cv", model="gaussian")
 endTime <- Sys.time()
 endTime-startTime
-#16.71
+#30.18 mins
+#11.95 mins
+#14.34 mins
+#12.91
 
 #com as.vector()
 startTime <- Sys.time()
@@ -75,4 +82,8 @@ mgwnbr3(data=georgia_std, formula=PctBach~PctBlack+PctFB+TotPop90+PctEld,
         bandwidth="cv", model="gaussian")
 endTime <- Sys.time()
 endTime-startTime
-#16.53
+#12.61 mins
+#13.35 mins
+#12.06 mins
+#12.96
+
