@@ -1,11 +1,11 @@
 checar as.vector() --> o que precisa realmente manter
 
-trocar sum(matriz) por t(j)%*%matriz, onde j é um vetor de 1s
+trocar sum(matriz) por t(j)%*%matriz, onde j é um vetor de 1s ------ ok
 
-rodar testes reiniciando a sessão do R e anotr os tempos
+rodar testes reiniciando a sessão do R e anotr os tempos ----- ok
 
 investigar estrutura do dist(), ver se consigo fazer de forma a não precisar converter em matriz
 
 olhar código da spgwr
 
-testar spgwr com esses dados e ver o tempo *****
+testar spgwr com esses dados e ver o tempo ----- ok
