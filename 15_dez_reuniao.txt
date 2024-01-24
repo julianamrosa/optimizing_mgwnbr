@@ -6,6 +6,6 @@ rodar testes reiniciando a sessão do R e anotr os tempos ----- ok
 
 investigar estrutura do dist(), ver se consigo fazer de forma a não precisar converter em matriz
 
-olhar código da spgwr
+olhar código da spgwr (dist e cálculo dos betas)
 
 testar spgwr com esses dados e ver o tempo ----- ok
