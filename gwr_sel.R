@@ -42,21 +42,26 @@ gwr.sel <- function(formula, data = list(), coords, adapt=FALSE,
   #	if (NROW(x) != NROW(dist2))
   #		stop("Input data and coordinates have different dimensions")
   #### parei aqui (antes disso é só conferência de argumentos e organização incial do modelo)
-  if (!adapt) {
-    bbox <- cbind(range(coords[,1]), range(coords[,2]))
-    difmin <- spDistsN1(bbox, bbox[2,], longlat)[1]
+  if (!adapt) { #FIXED
+    bbox <- cbind(range(coords[,1]), range(coords[,2])) #cria uma matriz onde a primeira coluna tem o máximo e o mínimo da longitude e a segunda o mesmo para a latitude
+    difmin <- spDistsN1(bbox, bbox[2,], longlat)[1] #calcula a distância euclidiana entre o ponto máximo e o mínimo
+    #o spDistsN1 vai retornar um vetor cujo tamanho equivale ao número de linhas da matriz passada
+    #(pois para cada ponto - linha - da matriz, é calculada a distância em relação ao ponto passado)
+    #nesse caso, retorna duas distâncias, sendo a primeira entre o ponto mínimo e o máximo e a segunda entre o máximo e o máximo (0)
+    #por isso pegamos o primeiro valor
     if (any(!is.finite(difmin)))
       difmin[which(!is.finite(difmin))] <- 0
     beta1 <- difmin/1000
     beta2 <- difmin
-    if (method == "cv") {
-      opt <- optimize(gwr.cv.f, lower=beta1, upper=beta2, 
+    if (method == "cv") { #CV
+      opt <- optimize(gwr.cv.f, lower=beta1, upper=beta2, #buscar essa função gwr.cv.f no repositório
                       maximum=FALSE, y=y, x=x, coords=coords, 
                       gweight=gweight, verbose=verbose, 
                       longlat=longlat, RMSE=RMSE, weights=weights, 
                       show.error.messages=show.error.messages,
-                      tol=tol)
-    } else {
+                      tol=tol) #acha o valor ótimo do cv
+    }
+    else { #AIC?
       opt <- optimize(gwr.aic.f, lower=beta1, upper=beta2, 
                       maximum=FALSE, y=y, x=x, coords=coords, 
                       gweight=gweight, verbose=verbose, 
@@ -65,8 +70,9 @@ gwr.sel <- function(formula, data = list(), coords, adapt=FALSE,
                       tol=tol)
     }
     bdwt <- opt$minimum
-    res <- bdwt
-  } else {
+    res <- bdwt #valor mínimo do cv/aic
+  }
+  else { #ADAPTIVE
     beta1 <- 0
     beta2 <- 1
     if (method == "cv") {
@@ -76,7 +82,7 @@ gwr.sel <- function(formula, data = list(), coords, adapt=FALSE,
                       verbose=verbose, longlat=longlat, RMSE=RMSE, 
                       weights=weights, 
                       show.error.messages=show.error.messages,
-                      tol=tol)
+                      tol=tol) #a função cv é diferente e alguns argumentos também --> verificar no repo
     } else {
       opt <- optimize(gwr.aic.adapt.f, lower=beta1, 
                       upper=beta2, maximum=FALSE, y=y, x=x, 
@@ -89,6 +95,6 @@ gwr.sel <- function(formula, data = list(), coords, adapt=FALSE,
     res <- q
   }
   if (isTRUE(all.equal(beta2, res, tolerance=.Machine$double.eps^(1/4))))
-    warning("Bandwidth converged to upper bound:", beta2)
+    warning("Bandwidth converged to upper bound:", beta2) #gera aviso se o valor mínimo de cv é igual ao beta2
   res
 }
