@@ -1,0 +1,8 @@
+baseado na gwr.sel() do pacote spgwr...
+
+considerar a possibilidade dos dados serem Spatial
+checar se os argumentos estão sendo passados corretamente e fazer correções ou dar erros/ avisos
+incluir os pesos (weights) na leitura inicial do modelo
+
+
+**obs.: descobrir como tem parâmetros sem default e a função ainda funciona sem passar argumento para eles.
