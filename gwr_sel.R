@@ -61,7 +61,7 @@ gwr.sel <- function(formula, data = list(), coords, adapt=FALSE,
                       show.error.messages=show.error.messages,
                       tol=tol) #acha o valor ótimo do cv
     }
-    else { #AIC?
+    else { #AIC
       opt <- optimize(gwr.aic.f, lower=beta1, upper=beta2, 
                       maximum=FALSE, y=y, x=x, coords=coords, 
                       gweight=gweight, verbose=verbose, 
@@ -98,3 +98,52 @@ gwr.sel <- function(formula, data = list(), coords, adapt=FALSE,
     warning("Bandwidth converged to upper bound:", beta2) #gera aviso se o valor mínimo de cv é igual ao beta2
   res
 }
+
+gwr.cv.f <- function(bandwidth, y, x, coords, gweight, verbose=TRUE, 
+                     longlat=FALSE, RMSE=FALSE, weights, show.error.messages=TRUE) {
+  n <- NROW(x)
+  #    m <- NCOL(x)
+  cv <- numeric(n) #salva um vetor numérico de tamanho n
+  options(show.error.messages = show.error.messages) #
+  for (i in 1:n) {
+    xx <- x[i, ] #loop que percorre linha por linha de x
+    dxs <- spDistsN1(coords, coords[i,], longlat=longlat) #calcula a distância de todos os pontos até o i-ésimo ponto
+    #dxs é um vetor de tamanho n com as distâncias ao i-ésimo local
+    if (!is.finite(dxs[i])) dxs[i] <- .Machine$double.xmax/2
+    w.i <- gweight(dxs^2, bandwidth)
+    #w.i <- exp((-0.5)*((dxs^2)/(bandwidth^2))) --> a linha de cima está fazendo isso
+    #ou seja, ela aplica uma 'transformação' nas distâncias quadradas, o resultado ainda é um vetor de tamanho n
+    #	w.i <- gweight(spDistsN1(coords, coords[i,], longlat=longlat)^2, bandwidth)
+    w.i[i] <- 0 #o peso do i-ésimo ponto na calibração dele mesmo deve ser zero (pela formula acima, seria 1)
+    w.i <- w.i * weights
+    if (any(w.i < 0 | is.na(w.i)))
+      stop(paste("Invalid weights for i:", i))
+    lm.i <- try(lm.wfit(y = y, x = x, w = w.i)) #tenta executar a regressão linear ponderada
+    if(!inherits(lm.i, "try-error")) { #se o lm não deu erro
+      b <- coefficients(lm.i)
+      cv[i] <- weights[i] * y[i] - (t(b) %*% (weights[i] * xx)) #calcula cv para a i-ésima linha e salva no vetor cv
+    }
+  }
+  score <- sum(t(cv) %*% cv) #depois de calcular todos esses cvs, faz sua soma quadrática para pegar o escore de fato
+  if (RMSE) score <- sqrt(score/n)
+  #    score <- sqrt(sum(t(cv) %*% cv)/n)
+  if (!show.error.messages) options(show.error.messages = TRUE)
+  if (verbose) cat("Bandwidth:", bandwidth, "CV score:", score, "\n")
+  score
+}
+
+long <- georgia[, 'X']
+lat <- georgia[, 'Y']
+COORD <<- matrix(c(long, lat), ncol=2)
+distance <- dist(COORD, "euclidean")
+distance <- as.matrix(distance)
+sum(distance[, 1]==distance[1, ])
+
+distance[, 1] #fazer isso usando spDistsN1()
+spDistsN1(COORD, COORD[1,])
+sum(spDistsN1(COORD, COORD[1,])==distance[, 1])
+
+#lembrar de pegar a distância máxima
+
+##implementar isso na função mgwnbr4
+##testar a diferença de tempo!!
