@@ -1,0 +1,2 @@
+unlist() nos casos (dados[, var])
+coloca o require(sp) dentro da função

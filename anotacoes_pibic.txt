@@ -5,7 +5,7 @@ Porém, a golden é executada múltiplas vezes no caso da técnica multiescala, 
 Pensei em separar as definições das funções apenas por questão de organização, mantendo suas chamadas dentro da mgwnbr, mas depois de estudar o
 funcionamento de escopos de variáveis no R, vi que essa não seria uma boa abordagem.
 Isso porque o R funciona com o "lexical scoping", ou seja, "variáveis livres" (que aperecem dentro da função, mas não são parâmetros dela e nem são definidas lá dentro)
-têm o seu valor buscado primeiro no ambiente de definição da variável e depois nos ambientes "acima" deles, subindo uma camada de cada vez. Então, muitas das variáveis livres usadas nas funções
+têm o seu valor buscado primeiro no ambiente de definição da função e depois nos ambientes "acima" deles, subindo uma camada de cada vez. Então, muitas das variáveis livres usadas nas funções
 cv, GSS e gwr são encontradas dentro da função maior (mgwnbr) e são, de fato, parâmetros da mgwnbr ou objetos que foram criados dentro dela.
 Ao passar a definição dessas funções para "fora" da mgwnbr (ou seja, para o ambiente global), as variáveis livres dentro dela serão buscadas no ambiente global,
 mesmo que essas funções estejam sendo convocadas dentro da mgwnbr(). E, logicamente, esses valores não serão encontrados no ambiente global, retornando um erro.
