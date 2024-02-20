@@ -3,22 +3,22 @@ mudanças para o CRAN
 apagar comentários ok
 colocar unlist() nos data[] ok
 passar de globais para locais todas as variáveis que não são alteradas dentro das funções ok
-trocar <<- por <- fora das funções
+mudar os <<- por assign() ok
 
-*** falta mudar os <<- dentro das funções por assign() e fazer as verificações do CRAN de novo
+**obs.: trocar função mgwnbr e \_ no .R do pacote
 
 funções vão da linha 174 até a 821
 
 DENTRO:
-yhat --> existem ocorrências globais e não globais
-s --> ok
-ai --> ok
-alphai --> existem ocorrências globais e não globais
-max_dist --> ok
-sm --> ok
-mrj --> ok
-sm3 --> ok
-rj --> ok
+yhat -------ok
+s --------ok
+ai -------ok
+alphai --------ok
+max_dist ------ok
+sm -----ok
+mrj -------ok
+sm3 -------ok
+rj ------ok
 
 FORA:
 yhat_beta

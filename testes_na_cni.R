@@ -34,7 +34,7 @@ install("mgwnbr")
 
 # Check for CRAN specific requirements using rhub and save it in the results 
 # objects
-verify_gwbr <- rhub::check_for_cran("mgwbr")
+verify_gwbr <- rhub::check_for_cran("mgwnbr")
 # Get the summary of your results
 verify_gwbr$cran_summary()
 
