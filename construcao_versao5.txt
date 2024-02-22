@@ -3,22 +3,22 @@ mudanças para o CRAN
 apagar comentários ok
 colocar unlist() nos data[] ok
 passar de globais para locais todas as variáveis que não são alteradas dentro das funções ok
-mudar os <<- por assign() ok
-
-**obs.: trocar função mgwnbr e \_ no .R do pacote
+mudar os <<- por assign() dentro das funções
+tirar prints
+colocar message
 
 funções vão da linha 174 até a 821
 
 DENTRO:
-yhat -------ok
-s --------ok
+yhat -------wait
+s
 ai -------ok
-alphai --------ok
-max_dist ------ok
-sm -----ok
-mrj -------ok
-sm3 -------ok
-rj ------ok
+alphai -----wait
+max_dist
+sm
+mrj
+sm3
+rj
 
 FORA:
 yhat_beta
