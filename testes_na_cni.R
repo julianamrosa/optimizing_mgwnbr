@@ -10,13 +10,19 @@ for (var in c("TotPop90", "PctRural", "PctEld", "PctFB", "PctPov", "PctBlack")){
 georgia$PctBach <- as.integer(georgia$PctBach)
 
 startTime <- Sys.time()
-mgwnbr1(data=georgia, formula=PctBach~TotPop90+PctRural+PctEld+PctFB+PctPov+PctBlack, lat="Y", long="X", globalmin=FALSE,
+mgwnbr5(data=georgia, formula=PctBach~TotPop90+PctRural+PctEld+PctFB+PctPov+PctBlack, lat="Y", long="X", globalmin=FALSE,
        method="adaptive_bsq", bandwidth="aic", model="negbin", mgwr=FALSE)
 endTime <- Sys.time()
 endTime-startTime
 
 startTime <- Sys.time()
-mgwnbr1(data=georgia, formula=PctBach~TotPop90+PctRural+PctEld+PctFB+PctPov+PctBlack, lat="Y", long="X", globalmin=FALSE,
+mgwnbr6(data=georgia, formula=PctBach~TotPop90+PctRural+PctEld+PctFB+PctPov+PctBlack, lat="Y", long="X", globalmin=FALSE,
+        method="adaptive_bsq", bandwidth="aic", model="negbin", mgwr=FALSE)
+endTime <- Sys.time()
+endTime-startTime
+
+startTime <- Sys.time()
+mgwnbr6(data=georgia, formula=PctBach~TotPop90+PctRural+PctEld+PctFB+PctPov+PctBlack, lat="Y", long="X", globalmin=FALSE,
         method="adaptive_bsq", bandwidth="aic", model="negbin")
 endTime <- Sys.time()
 endTime-startTime

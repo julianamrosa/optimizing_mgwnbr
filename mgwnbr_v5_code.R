@@ -424,12 +424,12 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
         }
         next
       }
-      if (i==1){
-        max_dist <<- max(dx)
-        #assign("max_dist", max(dx), envir=.GlobalEnv)
-      }
-      max_dist <<- max(max_dist, max(dx))
-      #assign("max_dist", max(max_dist, max(dx)), envir=.GlobalEnv)
+      # if (i==1){
+      #   max_dist <<- max(dx)
+      #   #assign("max_dist", max(dx), envir=.GlobalEnv)
+      # }
+      # max_dist <<- max(max_dist, max(dx))
+      # #assign("max_dist", max(max_dist, max(dx)), envir=.GlobalEnv)
     }
     if (model=="gaussian"){
       CV <- t((y-yhat)*wt)%*%(y-yhat)
@@ -462,14 +462,14 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
       CV <- AICC
     }
     res <- cbind(CV, npar)
-    #print(s)
     return (res)
   }
   GSS <- function(depy, indepx, fix){
     # DEFINING GOLDEN SECTION SEARCH PARAMETERS #
     if(method=="fixed_g" | method=="fixed_bsq"){
       ax <- 0
-      bx <- as.integer(max_dist+1)
+      #bx <- as.integer(max_dist+1)
+      bx <- as.integer(max(dist(COORD))+1)
       if (distancekm){
         bx <- bx*111
       }
@@ -1448,12 +1448,12 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
   if (model=='negbin'){
     Alpha <- cbind(Alpha, sig_alpha)
   }
-  i <- 1
-  for (element in output){
-    cat(header[i], "\n")
-    print(element)
-    i <- i+1
-  }
-  #message("NOTE: The denominator degrees of freedom for the t tests is ", dfg, ".")
+  # i <- 1
+  # for (element in output){
+  #   cat(header[i], "\n")
+  #   print(element)
+  #   i <- i+1
+  # }
+  message("NOTE: The denominator degrees of freedom for the t tests is ", dfg, ".")
   invisible(output)
 }

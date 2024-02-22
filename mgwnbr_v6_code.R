@@ -1,4 +1,4 @@
-mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
+mgwnbr6 <- function(data, formula, weight=NULL, lat, long,
                     globalmin=TRUE, method, model="negbin",
                     mgwr=TRUE, bandwidth="cv", offset=NULL,
                     distancekm=FALSE, int=50, h=NULL){
@@ -238,17 +238,20 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
         yhat_ <- get("yhat")
         yhat_[i] <- x[i, ]%*%b
         assign("yhat", yhat_, envir=parent.frame())
+        yhat[i] <- x[i, ]%*%b
         if (det(t(x)%*%(w*x*wt))==0){
           #s[i] <<- 0
           s_ <- get("s")
           s_[i] <- 0
           assign("s", s_, envir=parent.frame())
+          s[i] <- 0
         }
         else{
           #s[i] <<- (x[i,]%*%solve(t(x)%*%(w*x*wt))%*%t(x*w*wt))[i]
           s_ <- get("s")
           s_[i] <- (x[i,]%*%solve(t(x)%*%(w*x*wt))%*%t(x*w*wt))[i]
           assign("s", s_, envir=parent.frame())
+          s[i] <- (x[i,]%*%solve(t(x)%*%(w*x*wt))%*%t(x*w*wt))[i]
         }
         next
       }
@@ -313,8 +316,10 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
             uj <- ifelse(uj>E^100, E^100, uj)
             #ai <<- as.vector((uj/(1+alpha*uj))+(y-uj)*(alpha*uj/(1+2*alpha*uj+alpha^2*uj*uj)))
             assign("ai", as.vector((uj/(1+alpha*uj))+(y-uj)*(alpha*uj/(1+2*alpha*uj+alpha^2*uj*uj))), envir=parent.frame())
+            ai <- as.vector((uj/(1+alpha*uj))+(y-uj)*(alpha*uj/(1+2*alpha*uj+alpha^2*uj*uj)))
             #ai <<- ifelse(ai<=0, E^-5, ai)
             assign("ai", ifelse(ai<=0, E^-5, ai), envir=parent.frame())
+            ai <- ifelse(ai<=0, E^-5, ai)
             zj <- nj+(y-uj)/(ai*(1+alpha*uj))-yhat_beta+fi
             if (det(t(x)%*%(w*ai*x*wt))==0){
               b <- rep(0, nvar)
@@ -350,21 +355,25 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
         yhat_ <- get("yhat")
         yhat_[i] <- uj[i]
         assign("yhat", yhat_, envir=parent.frame())
+        yhat[i] <- uj[i]
         #alphai[i, 2] <<- alpha
         alphai_ <- get("alphai")
         alphai_[i, 2] <- alpha
         assign("alphai", alphai_, envir=parent.frame())
+        alphai[i, 2] <- alpha
         if (det(t(x)%*%(w*ai*x*wt))==0){
           #s[i] <<- 0
           s_ <- get("s")
           s_[i] <- 0
           assign("s", s_, envir=parent.frame())
+          s[i] <- 0
         }
         else{
           #s[i] <<- (x[i, ]%*%solve(t(x)%*%(w*ai*x*wt))%*%t(x*w*ai*wt))[i]
           s_ <- get("s")
           s_[i] <- (x[i, ]%*%solve(t(x)%*%(w*ai*x*wt))%*%t(x*w*ai*wt))[i]
           assign("s", s_, envir=parent.frame())
+          s[i] <- (x[i, ]%*%solve(t(x)%*%(w*ai*x*wt))%*%t(x*w*ai*wt))[i]
         }
         next
       }
@@ -379,8 +388,10 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
           uj <- ifelse(uj>E^100, E^100, uj)
           #ai <<- as.vector(uj*(1-uj))
           assign("ai", as.vector(uj*(1-uj)), envir=parent.frame())
+          ai <- as.vector(uj*(1-uj))
           #ai <<- ifelse(ai<=0, E^-5, ai)
           assign("ai", ifelse(ai<=0, E^-5, ai), envir=parent.frame())
+          ai <- ifelse(ai<=0, E^-5, ai)
           zj <- nj+(y-uj)/ai-yhat_beta+fi
           if (det(t(x)%*%(w*ai*x*wt))==0){
             b <- rep(0, nvar)
@@ -410,26 +421,29 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
         yhat_ <- get("yhat")
         yhat_[i] <- uj[i]
         assign("yhat", yhat_, envir=parent.frame())
+        yhat[i] <- uj[i]
         if (det(t(x)%*%(w*ai*x*wt))==0){
           #s[i] <<- 0
           s_ <- get("s")
           s_[i] <- 0
           assign("s", s_, envir=parent.frame())
+          s[i] <- 0
         }
         else{
           #s[i] <<- (x[i,]%*%solve(t(x)%*%(w*ai*x*wt))%*%t(x*w*wt*ai))[i]
           s_ <- get("s")
           s_[i] <- (x[i,]%*%solve(t(x)%*%(w*ai*x*wt))%*%t(x*w*wt*ai))[i]
           assign("s", s_, envir=parent.frame())
+          s[i] <- (x[i,]%*%solve(t(x)%*%(w*ai*x*wt))%*%t(x*w*wt*ai))[i]
         }
         next
       }
-      if (i==1){
-        #max_dist <<- max(dx)
-        assign("max_dist", max(dx), envir=parent.frame())
-      }
-      #max_dist <<- max(max_dist, max(dx))
-      assign("max_dist", max(max_dist, max(dx)), envir=parent.frame())
+      # if (i==1){
+      #   max_dist <<- max(dx)
+      #   #assign("max_dist", max(dx), envir=.GlobalEnv)
+      # }
+      # max_dist <<- max(max_dist, max(dx))
+      # #assign("max_dist", max(max_dist, max(dx)), envir=.GlobalEnv)
     }
     if (model=="gaussian"){
       CV <- t((y-yhat)*wt)%*%(y-yhat)
@@ -462,14 +476,14 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
       CV <- AICC
     }
     res <- cbind(CV, npar)
-    #print(s)
     return (res)
   }
   GSS <- function(depy, indepx, fix){
     # DEFINING GOLDEN SECTION SEARCH PARAMETERS #
     if(method=="fixed_g" | method=="fixed_bsq"){
       ax <- 0
-      bx <- as.integer(max_dist+1)
+      #bx <- as.integer(max_dist+1)
+      bx <- as.integer(max(dist(COORD))+1)
       if (distancekm){
         bx <- bx*111
       }
@@ -492,8 +506,16 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
       h1 <- bx1-r*(bx1-ax1)
       h2 <- ax1+r*(bx1-ax1)
       res1 <- cv(h1, depy, indepx, fix)
+      assign("s", s, envir=parent.frame())
+      assign("ai", ai, envir=parent.frame())
+      assign("yhat", yhat, envir=parent.frame())
+      assign("alphai", alphai, envir=parent.frame())
       CV1 <- res1[1]
       res2 <- cv(h2,depy,indepx,fix)
+      assign("s", s, envir=parent.frame())
+      assign("ai", ai, envir=parent.frame())
+      assign("yhat", yhat, envir=parent.frame())
+      assign("alphai", alphai, envir=parent.frame())
       CV2 <- res2[1]
       INT <- 1
       while(abs(h3-h0) > tol*(abs(h1)+abs(h2)) & INT<200){
@@ -503,6 +525,10 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
           h2 <- h0+r*(h3-h0)
           CV1 <- CV2
           res2 <- cv(h2,depy,indepx,fix)
+          assign("s", s, envir=parent.frame())
+          assign("ai", ai, envir=parent.frame())
+          assign("yhat", yhat, envir=parent.frame())
+          assign("alphai", alphai, envir=parent.frame())
           CV2 <- res2[1]
         }
         else{
@@ -511,6 +537,10 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
           h2 <- h0+r*(h3-h0)
           CV2 <- CV1
           res1 <- cv(h1, depy, indepx, fix)
+          assign("s", s, envir=parent.frame())
+          assign("ai", ai, envir=parent.frame())
+          assign("yhat", yhat, envir=parent.frame())
+          assign("alphai", alphai, envir=parent.frame())
           CV1 <- res1[1]
         }
         INT <- INT+1
@@ -549,8 +579,16 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
         h1 <- bx1-r*(bx1-ax1)
         h2 <- ax1+r*(bx1-ax1)
         res1 <- cv(h1, depy, indepx, fix)
+        assign("s", s, envir=parent.frame())
+        assign("ai", ai, envir=parent.frame())
+        assign("yhat", yhat, envir=parent.frame())
+        assign("alphai", alphai, envir=parent.frame())
         CV1 <- res1[1]
         res2 <- cv(h2,depy,indepx,fix)
+        assign("s", s, envir=parent.frame())
+        assign("ai", ai, envir=parent.frame())
+        assign("yhat", yhat, envir=parent.frame())
+        assign("alphai", alphai, envir=parent.frame())
         CV2 <- res2[1]
         INT <- 1
         while(abs(h3-h0) > tol*(abs(h1)+abs(h2)) & INT<200){
@@ -560,6 +598,10 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
             h2 <- h0+r*(h3-h0)
             CV1 <- CV2
             res2 <- cv(h2,depy,indepx,fix)
+            assign("s", s, envir=parent.frame())
+            assign("ai", ai, envir=parent.frame())
+            assign("yhat", yhat, envir=parent.frame())
+            assign("alphai", alphai, envir=parent.frame())
             CV2 <- res2[1]
           }
           else{
@@ -568,6 +610,10 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
             h2 <- h0+r*(h3-h0)
             CV2 <- CV1
             res1 <- cv(h1, depy, indepx, fix)
+            assign("s", s, envir=parent.frame())
+            assign("ai", ai, envir=parent.frame())
+            assign("yhat", yhat, envir=parent.frame())
+            assign("alphai", alphai, envir=parent.frame())
             CV1 <- res1[1]
           }
           INT <- INT+1
@@ -1448,12 +1494,12 @@ mgwnbr5 <- function(data, formula, weight=NULL, lat, long,
   if (model=='negbin'){
     Alpha <- cbind(Alpha, sig_alpha)
   }
-  i <- 1
-  for (element in output){
-    cat(header[i], "\n")
-    print(element)
-    i <- i+1
-  }
-  #message("NOTE: The denominator degrees of freedom for the t tests is ", dfg, ".")
+  # i <- 1
+  # for (element in output){
+  #   cat(header[i], "\n")
+  #   print(element)
+  #   i <- i+1
+  # }
+  message("NOTE: The denominator degrees of freedom for the t tests is ", dfg, ".")
   invisible(output)
 }

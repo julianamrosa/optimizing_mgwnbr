@@ -2,20 +2,34 @@ mudanças para o CRAN
 
 apagar comentários ok
 colocar unlist() nos data[] ok
-passar de globais para locais todas as variáveis que não são alteradas dentro das funções ok
-mudar os <<- por assign() dentro das funções
+trocar a parte do max_dist por max(dist(COORD))
 tirar prints
 colocar message
+
+
+
+VERSAO 6
+
+variáveis globais: trocar <<- por <- fora das funções;
+		   trocar <<- por assign() com parent.frame() dentro das funções;
+		   adicionar um <- abaixo do assign() dentro da cv() (s, ai, yhat e alphai)
+		   adicionar um assign() com parent.frame() após as chamadas da cv() (s, ai, yhat e alphai)
+apagar os prints
+
+
+
+
+
+
 
 funções vão da linha 174 até a 821
 
 DENTRO:
-yhat -------wait
-s
-ai -------ok
-alphai -----wait
-max_dist
-sm
+yhat
+s -----ok
+ai ------ok
+alphai
+sm -------ok
 mrj
 sm3
 rj
