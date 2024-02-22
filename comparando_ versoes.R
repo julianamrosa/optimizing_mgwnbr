@@ -51,4 +51,3 @@ mgwnbr5(data=georgia, formula=PctBach~TotPop90+PctRural+PctEld+PctFB+PctPov+PctB
         method="adaptive_bsq", bandwidth="aic", model="negbin", mgwr=FALSE)
 endTime <- Sys.time()
 endTime-startTime
-
