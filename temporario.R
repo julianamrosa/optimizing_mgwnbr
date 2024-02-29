@@ -1,4 +1,4 @@
-mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
+mgwnbr3 <- function(data, formula, weight=NULL, lat, long,
                     globalmin=TRUE, method, model="negbin",
                     mgwr=TRUE, bandwidth="cv", offset=NULL,
                     distancekm=FALSE, int=50, h=NULL){
@@ -27,12 +27,12 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
   wt <<-rep(1, N)
   if (!is.null(weight)){
     wt <<- data[, weight]
-    wt <<- as.matrix(wt)
+    #wt <<- as.matrix(wt)
   }
   Offset <<- rep(0, N)
   if (!is.null(offset)){
     Offset <- data[, offset]
-    Offset <<- as.matrix(Offset)
+    #Offset <<- as.matrix(Offset)
   }
   #X <- as.matrix(cbind(rep(1, N), X))
   nvarg <<- ncol(X)
@@ -97,14 +97,14 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
             dpar <- 0
           }
         }
-        alphag <<- as.numeric(1/parg)
+        alphag <<- as.vector(1/parg)
       }
       devg <- 0
       ddev <- 1
       cont2 <- 0
       while (abs(ddev)>0.000001 & cont2<100){
         uj <- ifelse(uj>E^100, E^100, uj)
-        ai <<- as.numeric((uj/(1+alphag*uj))+(Y-uj)*(alphag*uj/(1+2*alphag*uj+alphag^2*uj*uj)))
+        ai <<- as.vector((uj/(1+alphag*uj))+(Y-uj)*(alphag*uj/(1+2*alphag*uj+alphag^2*uj*uj)))
         ai <<- ifelse(ai<=0, E^-5, ai)
         zj <- nj+(Y-uj)/(ai*(1+alphag*uj))-Offset
         if (det(t(X)%*%(ai*X))==0){
@@ -115,7 +115,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
         }
         nj <- X%*%bg+Offset
         nj <- ifelse(nj>E^2, E^2, nj)
-        uj <- as.numeric(exp(nj))
+        uj <- as.vector(exp(nj))
         olddev <- devg
         uj <- ifelse(uj<E^-150, E^-150, uj)
         tt <- Y/uj
@@ -150,7 +150,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
     cont <- 0
     while (abs(ddev)>0.000001 & cont<100){
       uj <- ifelse(uj>E^100, E^100, uj)
-      ai <<- as.numeric(uj*(1-uj))
+      ai <<- as.vector(uj*(1-uj))
       ai <<- ifelse(ai<=0, E^-5, ai)
       zj <- nj+(Y-uj)/ai
       if (det(t(X)%*%(wt*ai*X))==0){
@@ -257,7 +257,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
           }
           else{
             if (par<=E^-5 & i>1){
-              par <- as.numeric(1/alphai[i-1, 2])
+              par <- as.vector(1/alphai[i-1, 2])
             }
             while (abs(dpar)>0.000001 & cont1<200){
               par <- ifelse(par<E^-10, E^-10, par)
@@ -265,7 +265,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
               hess <- sum(w*wt*(trigamma(par+y)-trigamma(par)+1/par-2/(par+uj)+(y+par)/(par+uj)^2))
               hess <- ifelse(hess==0, E^-23, hess)
               par0 <- par
-              par <- as.numeric(par0-solve(hess)%*%g)
+              par <- as.vector(par0-solve(hess)%*%g)
               if (cont1>50 & par>E^5){
                 dpar <- 0.0001
                 cont3 <- cont3+1
@@ -299,7 +299,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
           cont2 <- 1
           while (abs(ddev)>0.000001 & cont2<100){
             uj <- ifelse(uj>E^100, E^100, uj)
-            ai <<- as.numeric((uj/(1+alpha*uj))+(y-uj)*(alpha*uj/(1+2*alpha*uj+alpha^2*uj*uj)))
+            ai <<- as.vector((uj/(1+alpha*uj))+(y-uj)*(alpha*uj/(1+2*alpha*uj+alpha^2*uj*uj)))
             ai <<- ifelse(ai<=0, E^-5, ai)
             zj <- nj+(y-uj)/(ai*(1+alpha*uj))-yhat_beta+fi
             if (det(t(x)%*%(w*ai*x*wt))==0){
@@ -351,7 +351,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
         while (abs(ddev)>0.000001 & cont<100){
           cont <- cont+1
           uj <- ifelse(uj>E^100, E^100, uj)
-          ai <<- as.numeric(uj*(1-uj))
+          ai <<- as.vector(uj*(1-uj))
           ai <<- ifelse(ai<=0, E^-5, ai)	
           zj <- nj+(y-uj)/ai-yhat_beta+fi
           if (det(t(x)%*%(w*ai*x*wt))==0){
@@ -684,14 +684,14 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
                 dpar <- 0
               }
             }
-            alpha <- as.numeric(1/par)
+            alpha <- as.vector(1/par)
           }
           dev <- 0
           ddev <- 1
           cont2 <- 0
           while (abs(ddev)>0.000001 & cont2<100){
             uj <- ifelse(uj>E^100, E^100, uj)
-            ai <<- as.numeric((uj/(1+alpha*uj))+(y-uj)*(alpha*uj/(1+2*alpha*uj+alpha^2*uj*uj)))
+            ai <<- as.vector((uj/(1+alpha*uj))+(y-uj)*(alpha*uj/(1+2*alpha*uj+alpha^2*uj*uj)))
             ai <<- ifelse(ai<=0, E^-5, ai)	
             zj <- nj+(y-uj)/(ai*(1+alpha*uj))-yhat_beta+fi
             if (det(t(x)%*%(w*ai*x*wt))==0){
@@ -702,7 +702,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
             }
             nj <- x%*%b+yhat_beta-fi
             nj <- ifelse(nj>E^2, E^2, nj)
-            uj <- as.numeric(exp(nj))
+            uj <- as.vector(exp(nj))
             olddev <- dev
             uj <- ifelse(uj<E^-150, E^-150, uj)
             tt <- y/uj
@@ -763,7 +763,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
         while (abs(ddev)>0.000001 & cont<100){
           cont <- cont+1
           uj <- ifelse(uj>E^100, E^100, uj)
-          ai <<- as.numeric(uj*(1-uj))
+          ai <<- as.vector(uj*(1-uj))
           ai <<- ifelse(ai<=0, E^-5, ai)
           zj <- nj+(y-uj)/ai-yhat_beta+fi
           if (det(t(x)%*%(w*ai*x*wt))==0){
@@ -941,7 +941,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
     rsqr2 <- ym-(sum(Y*wt)^2)/sum(wt)
     rsqr <- 1-rsqr1/rsqr2
     rsqradj <- 1-((N-1)/(N-v1))*(1-rsqr)
-    sigma2 <- as.numeric(N*rsqr1/((N-v1)*sum(wt)))
+    sigma2 <- as.vector(N*rsqr1/((N-v1)*sum(wt)))
     root_mse <- sqrt(sigma2)
   }
   for (jj in 1:nvarg){
@@ -1151,7 +1151,7 @@ mgwnbr2 <- function(data, formula, weight=NULL, lat, long,
   #### global estimates ####
   if (model=='gaussian'){
     bg <- solve(t(X)%*%(X*wt))%*%t(X)%*%(Y*wt)
-    s2g <- as.numeric(t((Y-X%*%bg)*wt)%*%(Y-X%*%bg)/(N-nrow(bg)))
+    s2g <- as.vector(t((Y-X%*%bg)*wt)%*%(Y-X%*%bg)/(N-nrow(bg)))
     varg <- diag(solve(t(X)%*%(X*wt))*s2g)
   }
   if (is.null(weight)){
