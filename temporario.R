@@ -1,4 +1,4 @@
-mgwnbr3 <- function(data, formula, weight=NULL, lat, long,
+mgwnbr4 <- function(data, formula, weight=NULL, lat, long,
                     globalmin=TRUE, method, model="negbin",
                     mgwr=TRUE, bandwidth="cv", offset=NULL,
                     distancekm=FALSE, int=50, h=NULL){
@@ -180,14 +180,15 @@ mgwnbr3 <- function(data, formula, weight=NULL, lat, long,
   long <- data[, long]
   lat <- data[, lat]
   COORD <<- matrix(c(long, lat), ncol=2)
-  distance <- dist(COORD, "euclidean")
+  #distance <- dist(COORD, "euclidean")
   sequ <<- 1:N
   cv <- function(H, y, x, fi){
     nvar <- ncol(x)
     for (i in 1:N){
       for (j in 1:N){
         seqi <- rep(i, N)
-        distan <- cbind(seqi, sequ, as.matrix(distance)[,i])
+        dx <- spDistsN1(COORD, COORD[i,])
+        distan <- cbind(seqi, sequ, dx)
         if (distancekm){
           distan[,3] <- distan[,3]*111
         }
@@ -387,6 +388,10 @@ mgwnbr3 <- function(data, formula, weight=NULL, lat, long,
         }
         next
       }
+      if (i==1){
+        max_dist <<- max(dx)
+      }
+      max_dist <<- max(max_dist, max(dx))
     }
     if (model=="gaussian"){
       CV <- t((y-yhat)*wt)%*%(y-yhat)
@@ -425,7 +430,7 @@ mgwnbr3 <- function(data, formula, weight=NULL, lat, long,
     # DEFINING GOLDEN SECTION SEARCH PARAMETERS #
     if(method=="fixed_g" | method=="fixed_bsq"){
       ax <- 0
-      bx <- as.integer(max(distance)+1)
+      bx <- as.integer(max_dist+1)
       if (distancekm){
         bx <- bx*111
       }
@@ -564,7 +569,7 @@ mgwnbr3 <- function(data, formula, weight=NULL, lat, long,
     for (i in 1:N){
       for (j in 1:N){                                                                                                                        
         seqi <- rep(i, N)
-        distan <- cbind(seqi, sequ, as.matrix(distance)[,i])
+        distan <- cbind(seqi, sequ, spDistsN1(COORD, COORD[i,]))
         if (distancekm){
           distan[,3] <- distan[,3]*111
         }
