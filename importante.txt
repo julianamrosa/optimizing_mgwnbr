@@ -1,0 +1,3 @@
+importante!!!
+
+atualização no CRAN: correção para assign("ai", ai, envir=parent.frame()) #flag
