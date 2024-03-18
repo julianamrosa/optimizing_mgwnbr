@@ -1,3 +1,7 @@
 importante!!!
 
 atualização no CRAN: correção para assign("ai", ai, envir=parent.frame()) #flag
+
+colocar parâmetros completos e erros padrão completos na saída (de preferência para serem acessados com coef())
+implementar o uso de outras funções como summary(), etc
+implementar a mudança na padronização das covariáveis
