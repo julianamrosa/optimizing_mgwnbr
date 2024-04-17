@@ -187,7 +187,7 @@ mgwnbr4 <- function(data, formula, weight=NULL, lat, long,
     for (i in 1:N){
       for (j in 1:N){
         seqi <- rep(i, N)
-        dx <- spDistsN1(COORD, COORD[i,])
+        dx <- sp::spDistsN1(COORD, COORD[i,])
         distan <- cbind(seqi, sequ, dx)
         if (distancekm){
           distan[,3] <- distan[,3]*111
@@ -569,7 +569,7 @@ mgwnbr4 <- function(data, formula, weight=NULL, lat, long,
     for (i in 1:N){
       for (j in 1:N){                                                                                                                        
         seqi <- rep(i, N)
-        distan <- cbind(seqi, sequ, spDistsN1(COORD, COORD[i,]))
+        distan <- cbind(seqi, sequ, sp::spDistsN1(COORD, COORD[i,]))
         if (distancekm){
           distan[,3] <- distan[,3]*111
         }

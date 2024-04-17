@@ -473,21 +473,17 @@ mgwnbr6 <- function(data, formula, weight=NULL, lat, long,
       h2 <- ax1+r*(bx1-ax1)
       res1 <- cv(h1, depy, indepx, fix)
       assign("s", s, envir=parent.frame())
-      #flag start
-      if (model!="gaussian"){
+      if (model!="gaussian"){ #release 2
         assign("ai", ai, envir=parent.frame())
-      }
-      #flag end
+      }#release 2
       assign("yhat", yhat, envir=parent.frame())
       assign("alphai", alphai, envir=parent.frame())
       CV1 <- res1[1]
       res2 <- cv(h2,depy,indepx,fix)
       assign("s", s, envir=parent.frame())
-      #flag start
-      if (model!="gaussian"){
+      if (model!="gaussian"){ #release 2
         assign("ai", ai, envir=parent.frame())
-      }
-      #flag end
+      } #release 2
       assign("yhat", yhat, envir=parent.frame())
       assign("alphai", alphai, envir=parent.frame())
       CV2 <- res2[1]
@@ -500,11 +496,9 @@ mgwnbr6 <- function(data, formula, weight=NULL, lat, long,
           CV1 <- CV2
           res2 <- cv(h2,depy,indepx,fix)
           assign("s", s, envir=parent.frame())
-          #flag start
-          if (model!="gaussian"){
+          if (model!="gaussian"){ #release 2
             assign("ai", ai, envir=parent.frame())
-          }
-          #flag end
+          } #release 2
           assign("yhat", yhat, envir=parent.frame())
           assign("alphai", alphai, envir=parent.frame())
           CV2 <- res2[1]
@@ -516,11 +510,9 @@ mgwnbr6 <- function(data, formula, weight=NULL, lat, long,
           CV2 <- CV1
           res1 <- cv(h1, depy, indepx, fix)
           assign("s", s, envir=parent.frame())
-          #flag start
-          if (model!="gaussian"){
+          if (model!="gaussian"){ #release 2
             assign("ai", ai, envir=parent.frame())
-          }
-          #flag end
+          } #release 2
           assign("yhat", yhat, envir=parent.frame())
           assign("alphai", alphai, envir=parent.frame())
           CV1 <- res1[1]
@@ -562,21 +554,17 @@ mgwnbr6 <- function(data, formula, weight=NULL, lat, long,
         h2 <- ax1+r*(bx1-ax1)
         res1 <- cv(h1, depy, indepx, fix)
         assign("s", s, envir=parent.frame())
-        #flag start
-        if (model!="gaussian"){
+        if (model!="gaussian"){ #release 2
           assign("ai", ai, envir=parent.frame())
-        }
-        #flag end
+        } #release 2
         assign("yhat", yhat, envir=parent.frame())
         assign("alphai", alphai, envir=parent.frame())
         CV1 <- res1[1]
         res2 <- cv(h2,depy,indepx,fix)
         assign("s", s, envir=parent.frame())
-        #flag start
-        if (model!="gaussian"){
+        if (model!="gaussian"){ #release 2
           assign("ai", ai, envir=parent.frame())
-        }
-        #flag end
+        } #release 2
         assign("yhat", yhat, envir=parent.frame())
         assign("alphai", alphai, envir=parent.frame())
         CV2 <- res2[1]
@@ -589,11 +577,9 @@ mgwnbr6 <- function(data, formula, weight=NULL, lat, long,
             CV1 <- CV2
             res2 <- cv(h2,depy,indepx,fix)
             assign("s", s, envir=parent.frame())
-            #flag start
-            if (model!="gaussian"){
+            if (model!="gaussian"){ #release 2
               assign("ai", ai, envir=parent.frame())
-            }
-            #flag end
+            } #release 2
             assign("yhat", yhat, envir=parent.frame())
             assign("alphai", alphai, envir=parent.frame())
             CV2 <- res2[1]
@@ -605,11 +591,9 @@ mgwnbr6 <- function(data, formula, weight=NULL, lat, long,
             CV2 <- CV1
             res1 <- cv(h1, depy, indepx, fix)
             assign("s", s, envir=parent.frame())
-            #flag start
-            if (model!="gaussian"){
+            if (model!="gaussian"){ #release 2
               assign("ai", ai, envir=parent.frame())
-            }
-            #flag end
+            } #release 2
             assign("yhat", yhat, envir=parent.frame())
             assign("alphai", alphai, envir=parent.frame())
             CV1 <- res1[1]
@@ -1232,6 +1216,14 @@ mgwnbr6 <- function(data, formula, weight=NULL, lat, long,
   qntl <- rbind(round(qntl, 6), IQR=round(IQR, 6))
   descriptb <- rbind(apply(beta2, 2, mean), apply(beta2, 2, min), apply(beta2, 2, max))
   rownames(descriptb) <- c('Mean', 'Min', 'Max')
+  if (model=='negbin'){ #release 2
+    colnames(beta2) <- c('Intercept', XVAR, 'alpha')#release 2
+  } #release 2
+  else{ #release 2
+    colnames(beta2) <- c('Intercept', XVAR) #release 2
+  } #release 2
+  output <- append(output, list(as.data.frame(beta2))) #release 2
+  names(output)[length(output)] <- "mgwr_param_estimates" #release 2
   if (model=='negbin'){
     colnames(qntl) <- c('Intercept', XVAR, 'alpha')
   }
@@ -1268,6 +1260,14 @@ mgwnbr6 <- function(data, formula, weight=NULL, lat, long,
   header <- append(header, "t-Critical")
   output <- append(output, list(t_critical))
   names(output)[length(output)] <- "t_critical"
+  if (model=='negbin'){ #release 2
+    colnames(stdbeta2) <- c('Intercept', XVAR, 'alpha')#release 2
+  } #release 2
+  else{ #release 2
+    colnames(stdbeta2) <- c('Intercept', XVAR) #release 2
+  } #release 2
+  output <- append(output, list(as.data.frame(stdbeta2))) #release 2
+  names(output)[length(output)] <- "mgwr_se" #release 2
   if (model=='negbin'){
     colnames(qntls) <- c('Intercept', XVAR, 'alpha')
   }
