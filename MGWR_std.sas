@@ -777,6 +777,15 @@ stdbm[,jj]=sqrt(Sm3[,jj]);
 end;
 
 %IF %UPCASE(&MODEL)=GAUSSIAN %THEN %DO;
+stdbm[,1]=sqrt(stdbm[,1]##2+((stdy##2)*(stdbm[,2:ncol(stdbm)]##2/(stdx##2))#(meanx##2))[,+]);
+stdbm[,2:ncol(stdbm)]=sqrt((stdy##2)*stdbm[,2:ncol(stdbm)]##2/(stdx##2));
+%END;
+%ELSE %DO;
+stdbm[,1]=sqrt(stdbm[,1]##2+((stdbm[,2:ncol(stdbm)]##2/(stdx##2))#(meanx##2))[,+]);
+stdbm[,2:ncol(stdbm)]=sqrt(stdbm[,2:ncol(stdbm)]##2/(stdx##2));
+%END;
+
+%IF %UPCASE(&MODEL)=GAUSSIAN %THEN %DO;
 ll=-n*log(rsqr1/n)/2-n*log(2*arcos(-1))/2-sum((y-yhat)#(y-yhat))/(2*(rsqr1/n));
 AIC=2*v1-2*ll;
 AICc=AIC+2*(v1*(v1+1)/(n-v1-1));
@@ -897,9 +906,12 @@ varg=vecdiag(inv(x`*(x#wt))*s2g);
 vargd=varg;
 stdg=sqrt(vargd);
 tg=bg/stdg;
+b2=bg;
 bg[2:nrow(bg)]=bg[2:nrow(bg)]*stdy/stdx`;
 bg[1]=stdy*bg[1]-(bg[2:nrow(bg)]#meanx`)[+]+meany;
 stdg=bg/tg;
+stdg[1]=sqrt(varg[1]+((stdy##2)#(varg[2:nrow(varg)]/(stdx##2)`)#(meanx##2)`)[+]);
+tg=bg/stdg;
 dfg=n-nrow(bg);
 probtg=2*(1-probt(abs(tg),dfg));
 %END;
@@ -908,32 +920,31 @@ probtg=2*(1-probt(abs(tg),dfg));
 vargd=varg;
 dfg=n-nrow(bg);
 %END;
-stdg=sqrt(vargd);
+
 %IF %UPCASE(&MODEL)=NEGBIN %THEN %DO;
-b2=bg//alphag;
+stdg=sqrt(varg);
+b2=bg;
+bg=bg//alphag;
 stdg=stdg//sealphag;
 stdg[1]=sqrt(stdg[1]##2+((stdg[2:nrow(stdg)-1]##2/(stdx##2)`)#(meanx##2)`)[+]);
 stdg[2:nrow(stdg)-1]=sqrt(stdg[2:nrow(stdg)-1]##2/(stdx##2)`);
-b2[2:nrow(b2)-1]=b2[2:nrow(b2)-1]/stdx`;
-b2[1]=b2[1]-(b2[2:nrow(b2)-1]#meanx`)[+];
-
-bg[2:nrow(bg)]=bg[2:nrow(bg)]/stdx`;
-bg[1]=bg[1]-(bg[2:nrow(bg)]#meanx`)[+];
+bg[2:nrow(bg)-1]=bg[2:nrow(bg)-1]/stdx`;
+bg[1]=bg[1]-(bg[2:nrow(bg)-1]#meanx`)[+];
 dfg=dfg-1;
+tg=bg/stdg;
+probtg=2*(1-probt(abs(tg),dfg));
 %END;
-print bg b2;
+%IF %UPCASE(&MODEL)=POISSON %THEN %DO;
+stdg=sqrt(varg);
 b2=bg;
 stdg[1]=sqrt(stdg[1]##2+((stdg[2:nrow(stdg)]##2/(stdx##2)`)#(meanx##2)`)[+]);
 stdg[2:nrow(stdg)]=sqrt(stdg[2:nrow(stdg)]##2/(stdx##2)`);
-b2[2:nrow(b2)]=b2[2:nrow(b2)]/stdx`;
-b2[1]=b2[1]-(b2[2:nrow(b2)]#meanx`)[+];
-
 bg[2:nrow(bg)]=bg[2:nrow(bg)]/stdx`;
 bg[1]=bg[1]-(bg[2:nrow(bg)]#meanx`)[+];
-
 tg=bg/stdg;
 probtg=2*(1-probt(abs(tg),dfg));
-bg_stdg=b2||stdg;
+%END;
+bg_stdg=bg||stdg;
 print "Global Parameter Estimates",,bg_stdg[label=' ' rowname={'Intercept' &xvar %IF %UPCASE(&MODEL)=NEGBIN %THEN %DO;'alpha' %END;}
 colname={"Par. Est." "Std Error"}] tg[format=comma6.2 label="t Value"] probtg[format=pvalue6. label="Pr > |t|"],,
 "NOTE: The denominator degrees of freedom for the t tests is" dfg[label=' ']".";
