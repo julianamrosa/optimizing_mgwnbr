@@ -1,7 +1,7 @@
 mgwnbr <- function(data, formula, weight=NULL, lat, long,
                    globalmin=TRUE, method, model="negbin",
                    mgwr=TRUE, bandwidth="cv", offset=NULL,
-                   distancekm=FALSE, int=50, h=NULL){
+                   distancekm=FALSE, int=50, h=NULL, id=NULL){
   output <- list()
   header <- c()
   yhat_beta <- NULL
@@ -17,6 +17,20 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
   Y <- model.extract(mf, "response")
   N <- length(Y)
   X <- model.matrix(mt, mf)
+  ## standardizing variables ## release 3
+  meanx <- colMeans(X[, -1])
+  stdx <- apply(X[, -1], 2, sd)
+  xnstd <- X[, -1]
+  for (var in labels(terms(formula))){
+    X[, var] <- scale(X[, var])
+  }
+  if (model=="gaussian"){
+    meany <- mean(Y)
+    stdy <- sd(Y)
+    ynstd <- Y
+    Y <- as.vector(scale(Y))
+  }
+  ####
   wt <-rep(1, N)
   if (!is.null(weight)){
     wt <- unlist(data[, weight])
@@ -25,6 +39,11 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
   if (!is.null(offset)){
     Offset <- unlist(data[, offset])
   }
+  if (!is.null(id)){ #release 3
+    id <- unlist(data[, id])
+  }
+  names(Y) <- id #release 3
+  rownames(X) <- id #release 3
   nvarg <- ncol(X)
   yhat <- rep(0, N)
   bi <- matrix(0, nvarg*N, 4)
@@ -960,6 +979,7 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
     output <- append(output, hh)
     names(output) <- "general_bandwidth"
     yhat_beta <- gwr(hh,Y,X,finb)
+    rownames(yhat_beta) <- id
     beta <- yhat_beta[,2:(nvarg+1)]
     Fi <- X*beta
     mband <- hh
@@ -979,6 +999,7 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
     names(output) <- "general_bandwidth"
     #computing residuals
     yhat_beta <- gwr(hh, Y, X, finb)
+    rownames(yhat_beta) <- id
     error <- Y-yhat_beta[ ,1]
     beta <- yhat_beta[ ,2:(nvarg+1)]
     Fi <- X*beta
@@ -1005,6 +1026,7 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
             mband[i] <- GSS(ferror, as.matrix(X[,i]), finb)
           }
           yhat_beta <- gwr(mband[i], ferror, as.matrix(X[,i]), finb)
+          rownames(yhat_beta) <- id
           beta[,i] <- yhat_beta[,2]
           Fi[,i] <- X[,i]*beta[,i]
           error <- Y-apply(Fi, 1, sum)
@@ -1024,6 +1046,7 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
             mband[i] <- GSS(Y, as.matrix(X[,i]), Fi[,i])
           }
           yhat_beta <- gwr(mband[i], Y, as.matrix(X[,i]), Fi[,i])
+          rownames(yhat_beta) <- id
           beta[,i] <- yhat_beta[,2]
           Fi[,i] <- X[,i]*beta[,i]
           m1 <- (i-1)*N+1
@@ -1054,10 +1077,23 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
     output <- append(output, list(band))
     names(output)[length(output)] <- "band"
   }
+  if (model=="gaussian"){ #release 3
+    beta_std <- beta
+    beta[, 2:ncol(beta)] <- t(t(beta[, 2:ncol(beta)]*stdy)/stdx)
+    beta[, 1] <- stdy*beta[, 1]-rowSums(t(t(beta[, 2:ncol(beta)])*meanx))+meany
+  }
+  else{ #release 3
+    beta_std <- beta
+    beta[, 2:ncol(beta)] <- t(t(beta[, 2:ncol(beta)])/stdx)
+    beta[, 1] <- beta[, 1]-rowSums(t(t(beta[, 2:ncol(beta)])*meanx))
+  }
   v1 <- sum(diag(sm))
   if (model=='gaussian'){
     yhat <- apply(Fi, 1, sum)
     res <- Y-yhat
+    fitted_values <- as.data.frame(cbind(wt, Y, yhat, res)) #release 3
+    output <- append(output, list(fitted_values)) #release 3
+    names(output)[length(output)] <- "fitted_values" #release 3
     rsqr1 <- t(res*wt)%*%res
     ym <- t(Y*wt)%*%Y
     rsqr2 <- ym-(sum(Y*wt)^2)/sum(wt)
@@ -1090,6 +1126,19 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
       }
     }
   }
+  ## open - release 3
+  if (model=="gaussian"){
+    stdbm[,1] <- sqrt(stdbm[,1]^2+rowSums((stdy^2)*t(t(stdbm[,2:ncol(stdbm)]^2)/(stdx^2)*(meanx^2))))
+    stdbm[,2:ncol(stdbm)] <- sqrt((stdy^2)*t(t(stdbm[,2:ncol(stdbm)]^2)/(stdx^2)))
+  }
+  else{
+    stdbm[,1] <- sqrt(stdbm[,1]^2+rowSums(t(t(stdbm[,2:ncol(stdbm)]^2)/(stdx^2)*(meanx^2))))
+    stdbm[,2:ncol(stdbm)] <- sqrt(t(t(stdbm[,2:ncol(stdbm)]^2)/(stdx^2)))
+  }
+  ## close - release 3
+  if (!is.null(id)){ #release 3
+    rownames(stdbm) <- id
+  }
   if (model=='gaussian'){
     ll <- -N*log(rsqr1/N)/2-N*log(2*acos(-1))/2-sum((Y-yhat)*(Y-yhat))/(2*(rsqr1/N))
     AIC <- 2*v1-2*ll
@@ -1106,6 +1155,10 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
   }
   else if (model=='poisson'){
     yhat <- exp(apply(Fi, 1, sum)+Offset)
+    res <- Y-yhat #release 3
+    fitted_values <- as.data.frame(cbind(wt, Y, yhat, res)) #release 3
+    output <- append(output, list(fitted_values)) #release 3
+    names(output)[length(output)] <- "fitted_values" #release 3
     tt <- Y/yhat
     tt <- ifelse(tt==0, E^-10, tt)
     dev <- 2*sum(Y*log(tt)-(Y-yhat))
@@ -1129,6 +1182,10 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
   }
   else if (model=='negbin'){
     yhat <- exp(apply(Fi, 1, sum)+Offset)
+    res <- Y-yhat #release 3
+    fitted_values <- as.data.frame(cbind(wt, Y, yhat, res)) #release 3
+    output <- append(output, list(fitted_values)) #release 3
+    names(output)[length(output)] <- "fitted_values" #release 3
     tt <- Y/yhat
     tt <- ifelse(tt==0, E^-10, tt)
     dev <- 2*sum(Y*log(tt)-(Y+1/alphai[,2])*log((1+alphai[,2]*Y)/(1+alphai[,2]*yhat)))
@@ -1152,6 +1209,10 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
   }
   else{ #else if (model=='logistic'){
     yhat <- exp(apply(Fi, 1, sum))/(1+exp(apply(Fi, 1, sum)))
+    res <- Y-yhat #release 3
+    fitted_values <- as.data.frame(cbind(wt, Y, yhat, res)) #release 3
+    output <- append(output, list(fitted_values)) #release 3
+    names(output)[length(output)] <- "fitted_values" #release 3
     tt <- Y/yhat
     tt <- ifelse(tt==0, E^-10, tt)
     yhat2 <- ifelse(yhat==1, 0.99999, yhat)
@@ -1255,7 +1316,7 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
   rownames(descripts) <- c('Mean', 'Min', 'Max')
   header <- append(header, "alpha-level=0.05")
   output <- append(output, list(malpha))
-  names(output)[length(output)] <- "p_values"
+  names(output)[length(output)] <- "alpha_level_5_pct" #release 3
   t_critical <- round(t_critical, 2)
   header <- append(header, "t-Critical")
   output <- append(output, list(t_critical))
@@ -1291,19 +1352,49 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
     bg <- solve(t(X)%*%(X*wt), tol=E^-307)%*%t(X)%*%(Y*wt)
     s2g <- as.vector(t((Y-X%*%bg)*wt)%*%(Y-X%*%bg)/(N-nrow(bg)))
     varg <- diag(solve(t(X)%*%(X*wt), tol=E^-307)*s2g)
+    ## open - release 3
+    vargd <- varg
+    stdg <- sqrt(vargd)
+    tg <- bg/stdg
+    b2 <- bg
+    bg[2:nrow(bg)] <- bg[2:nrow(bg)]*stdy/stdx
+    bg[1] <- stdy*bg[1]-sum(bg[2:nrow(bg)]*meanx)+meany
+    stdg <- bg/tg
+    stdg[1] <- sqrt(varg[1]+sum((stdy^2)*(varg[2:length(varg)]/(stdx^2))*(meanx^2)))
+    tg <- bg/stdg
+    dfg <- N-nrow(bg)
+    probtg <- 2*(1-pt(abs(tg), dfg))
+    ## close - release 3
   }
   if (is.null(weight)){
     vargd <- varg
     dfg <- N-nrow(bg)
   }
-  stdg <- matrix(sqrt(vargd))
+  ## open - release 3
   if (model=='negbin'){
+    stdg <- sqrt(varg)
+    b2 <- bg
     bg <- rbind(bg, alphag)
-    stdg <- rbind(stdg, sealphag)
+    stdg <- c(stdg, sealphag)
+    stdg[1] <- sqrt(stdg[1]^2+sum((stdg[2:(length(stdg)-1)]^2/(stdx^2))*(meanx^2)))
+    stdg[2:(length(stdg)-1)] <- sqrt(stdg[2:(length(stdg)-1)]^2/(stdx^2))
+    bg[2:(nrow(bg)-1)] <- bg[2:(nrow(bg)-1)]/stdx
+    bg[1] <- bg[1]-sum(bg[2:(nrow(bg)-1)]*meanx)
     dfg <- dfg-1
+    tg <- bg/stdg
+    probtg <- 2*(1-pt(abs(tg),dfg))
   }
-  tg <- bg/stdg
-  probtg <- 2*(1-pt(abs(tg), dfg))
+  if (model=="poisson"){
+    stdg <- sqrt(varg)
+    b2 <- bg
+    stdg[1] <- sqrt(stdg[1]^2+sum((stdg[2:length(stdg)]^2/(stdx^2))*(meanx^2)))
+    stdg[2:length(stdg)] <- sqrt(stdg[2:length(stdg)]^2/(stdx^2))
+    bg[2:nrow(bg)] <- bg[2:nrow(bg)]/stdx
+    bg[1] <- bg[1]-sum(bg[2:nrow(bg)]*meanx)
+    tg <- bg/stdg
+    probtg <- 2*(1-pt(abs(tg),dfg))
+  }
+  ## close - release 3
   bg_stdg_tg_probtg <- cbind(bg, stdg, tg, probtg)
   if (model=='negbin'){
     rownames(bg_stdg_tg_probtg) <- c('Intercept', XVAR, 'alpha')
@@ -1371,6 +1462,8 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
     names(output)[length(output)] <- "global_measures"
   }
   else{ #else if (model=='logistic'){
+    X <- xnstd
+    X <- cbind(rep(1, N), X)
     yhatg <- exp(X%*%bg)/(1+exp(X%*%bg))
     lyhat2 <- 1-yhatg
     lyhat2 <- ifelse(lyhat2==0, E^-10, lyhat2)
