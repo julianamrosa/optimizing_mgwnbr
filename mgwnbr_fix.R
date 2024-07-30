@@ -150,6 +150,7 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
       ddpar <- parg-parold
     }
     varg <- diag(solve(t(X*wt*ai)%*%X, tol=E^-307))
+    dfg <- N-nrow(bg) #release 3
   }
   else if (model=="logistic"){
     uj <- (Y+mean(Y))/2
@@ -185,6 +186,7 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
     ujg <- uj
     yhat <- uj
     varg <- diag(solve(t(X*wt*ai)%*%X, tol=E^-307))
+    dfg <- N-nrow(bg) #release 3
   }
   long <- unlist(data[, long])
   lat <- unlist(data[, lat])
@@ -1364,13 +1366,7 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
     tg <- bg/stdg
     dfg <- N-nrow(bg)
     probtg <- 2*(1-pt(abs(tg), dfg))
-    ## close - release 3
   }
-  if (is.null(weight)){
-    vargd <- varg
-    dfg <- N-nrow(bg)
-  }
-  ## open - release 3
   if (model=='negbin'){
     stdg <- sqrt(varg)
     b2 <- bg
@@ -1384,7 +1380,7 @@ mgwnbr <- function(data, formula, weight=NULL, lat, long,
     tg <- bg/stdg
     probtg <- 2*(1-pt(abs(tg),dfg))
   }
-  if (model=="poisson"){
+  if (model=="poisson" | model=="logistic"){
     stdg <- sqrt(varg)
     b2 <- bg
     stdg[1] <- sqrt(stdg[1]^2+sum((stdg[2:length(stdg)]^2/(stdx^2))*(meanx^2)))
