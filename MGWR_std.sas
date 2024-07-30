@@ -106,6 +106,7 @@ cont=cont+1;
 ddpar=parg-parold;
 end;
 varg=vecdiag(inv((x#wt#Ai)`*x));
+dfg=n-nrow(bg);
 %END;
 
 %IF %UPCASE(&MODEL)=LOGISTIC %THEN %DO;
@@ -136,6 +137,7 @@ end;
 ujg=uj;
 yhat=uj;
 varg=vecdiag(inv((x#wt#Ai)`*x));
+dfg=n-nrow(bg);
 %END;
 /*****************************************/
 
@@ -916,11 +918,6 @@ dfg=n-nrow(bg);
 probtg=2*(1-probt(abs(tg),dfg));
 %END;
 
-%IF &WEIGHT = %THEN %DO;
-vargd=varg;
-dfg=n-nrow(bg);
-%END;
-
 %IF %UPCASE(&MODEL)=NEGBIN %THEN %DO;
 stdg=sqrt(varg);
 b2=bg;
@@ -934,7 +931,7 @@ dfg=dfg-1;
 tg=bg/stdg;
 probtg=2*(1-probt(abs(tg),dfg));
 %END;
-%IF %UPCASE(&MODEL)=POISSON %THEN %DO;
+%IF %UPCASE(&MODEL)=POISSON or %UPCASE(&MODEL)=LOGISTIC %THEN %DO;
 stdg=sqrt(varg);
 b2=bg;
 stdg[1]=sqrt(stdg[1]##2+((stdg[2:nrow(stdg)]##2/(stdx##2)`)#(meanx##2)`)[+]);
